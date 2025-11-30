@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Phishing URL Detector</title>
+    <style>
+        body { font-family: Arial; padding: 40px; }
+        input[type=text] { width: 300px; padding: 8px; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .feedback-btn { font-size: 24px; margin-left: 10px; }
+        pre { background: #f4f4f4; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Phishing URL Detector</h1>
+    <input type="text" id="urlInput" placeholder="Enter URL here">
+    <button onclick="checkUrl()">Check</button>
+
+    <pre id="result"></pre>
+
+    <div id="feedback" style="display:none;">
+        <span>Was this correct?</span>
+        <button class="feedback-btn" onclick="sendFeedback(1)">👍</button>
+        <button class="feedback-btn" onclick="sendFeedback(0)">👎</button>
+    </div>
+
+    <script>
+        let currentUrl = "";
+        let currentRequestId = "";
+
+        async function checkUrl() {
+            const url = document.getElementById("urlInput").value.trim();
+            if (!url) return alert("Please enter a URL");
+
+            currentUrl = url;
+            document.getElementById("result").innerText = "Checking...";
+            document.getElementById("feedback").style.display = "none";
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById("result").innerText = "Error: " + data.error;
+                } else {
+                    currentRequestId = data.request_id; // store request_id for feedback
+                    document.getElementById("result").innerText = 
+                        `URL: ${data.url}\nModel: ${data.model_used}\nPhishing: ${data.is_phishing}\nSource: ${data.source}\nLatency: ${data.latency_ms} ms`;
+                    document.getElementById("feedback").style.display = "block";
+                }
+            } catch (err) {
+                document.getElementById("result").innerText = "Error: " + err.message;
+            }
+        }
+
+        async function sendFeedback(value) {
+            if (!currentRequestId) return alert("No request to send feedback for");
+
+            try {
+                const response = await fetch("/feedback", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ request_id: currentRequestId, feedback: value })
+                });
+
+                const data = await response.json();
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    alert(data.message);
+                    document.getElementById("feedback").style.display = "none";
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
