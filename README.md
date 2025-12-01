@@ -284,6 +284,6 @@ This project demonstrates a **scalable, cloud-native phishing detection system**
 * Model versioning
 * Real-time feedback for iterative improvements
 
----
+# 🚀 Live Demo
 
-If you'd like, I can also generate a **PowerPoint presentation**, **architecture explanation slides**, or **demo script** for your class submission.
+[![Live Demo](https://img.shields.io/badge/Live%20App-Click%20Here-brightgreen?style=for-the-badge)](http://flask-alb-416667478.us-east-2.elb.amazonaws.com)
