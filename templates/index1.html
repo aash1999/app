@@ -16,7 +16,7 @@
 
         .container {
             background: #ffffff;
-            width: 480px;
+            width: 450px;
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 5px 18px rgba(0,0,0,0.12);
@@ -29,17 +29,16 @@
             color: #003a75;
         }
 
-        input[type=text], select {
+        input[type=text] {
             width: 100%;
             padding: 12px;
-            margin-top: 10px;
             border-radius: 6px;
             border: 1px solid #cccccc;
             font-size: 14px;
         }
 
         button {
-            margin-top: 15px;
+            margin-top: 12px;
             padding: 10px 20px;
             background: #0066ff;
             color: #fff;
@@ -88,28 +87,7 @@
 <div class="container">
     <h1>🔍 Phishing URL Detector</h1>
 
-    <!-- URL Dropdown -->
-    <select id="urlDropdown" onchange="selectUrl()">
-        <option value="">Select known suspicious URL...</option>
-        <option value="http://u1047531.cp.regruhosting.ru/acces-inges-20200104-t452/3facd">Phishing URL #1</option>
-        <option value="https://nhsmaintenance.weebly.com">Phishing URL #2</option>
-        <option value="http://nhomkinhlongxuyen.com/wp-content/themes/thesis/GODADDY/godaddyfix/godaddyfix/godaddyfix/login.php?l=_JeHFUq_VJOXK0QWHtoGYDw1774256418&amp;fid.13InboxLight.aspxn.1774256418&amp;fid.125289964252813InboxLight99642_Product-email&amp;email=">Phishing URL #3</option>
-        <option value="http://www.phishtank.com/phish_detail.php?phish_id=6556841">Phishing URL #4</option>
-    </select>
-
-    <!-- Manual URL Input -->
-    <input type="text" id="urlInput" placeholder="Or manually enter URL here...">
-
-    <!-- Model Selection Dropdown -->
-    <select id="modelSelect">
-        <option value="auto_model.pkl">Auto Model</option>
-        <option value="forest_model.pkl">Random Forest</option>
-        <option value="mlp_model.pkl">MLP Model</option>
-        <option value="svm_model.pkl">SVM Model</option>
-        <option value="tree_model.pkl">Decision Tree</option>
-        <option value="xgb_model.pkl">XGBoost</option>
-    </select>
-
+    <input type="text" id="urlInput" placeholder="Enter URL to check...">
     <button onclick="checkUrl()">Check URL</button>
 
     <div id="result-box" style="display:none;">
@@ -127,31 +105,22 @@
     let currentUrl = "";
     let currentRequestId = "";
 
-    function selectUrl() {
-        const selected = document.getElementById("urlDropdown").value;
-        if (selected) {
-            document.getElementById("urlInput").value = selected;
-        }
-    }
-
     async function checkUrl() {
         const url = document.getElementById("urlInput").value.trim();
-        const model = document.getElementById("modelSelect").value;
-
-        if (!url) return alert("Please enter or select a URL");
+        if (!url) return alert("Please enter a URL");
 
         currentUrl = url;
         document.getElementById("result").innerText = "Checking...";
         document.getElementById("result-box").style.display = "block";
         document.getElementById("feedback").style.display = "none";
-
+        
         try {
             const res = await fetch("/predict", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ url, model })
+                body: JSON.stringify({ url })
             });
-
+            
             const data = await res.json();
 
             if (data.error) {
@@ -160,7 +129,7 @@
             }
 
             currentRequestId = data.request_id;
-            document.getElementById("result").innerText = 
+            document.getElementById("result").innerText =
                 `URL: ${data.url}\nModel Used: ${data.model_used}\nPhishing: ${data.is_phishing}\nLatency: ${data.latency_ms} ms\nSource: ${data.source}`;
 
             document.getElementById("feedback").style.display = "block";
