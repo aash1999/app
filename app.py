@@ -17,7 +17,7 @@ cache_table = dynamodb.Table(CACHE_TABLE)
 hits_table = dynamodb.Table(API_HITS_TABLE)
 
 # ====== MODEL CACHE ======
-MODEL_DIR = "models"
+MODEL_DIR = "./models"
 os.makedirs(MODEL_DIR, exist_ok=True)
 loaded_models = {}  # cache loaded models
 
@@ -29,19 +29,46 @@ except:
     EC2_INSTANCE_ID = "local-dev"
 
 # ====== HELPER: Load model from S3 ======
+# def load_model_from_s3(model_name):
+#     import os, joblib, boto3
+#     s3 = boto3.client("s3")
+#     model_path = os.path.join(MODEL_DIR, model_name)
+#     if model_name in loaded_models:
+#         return loaded_models[model_name]
+#     if not os.path.exists(model_path):
+#         print("yes")
+#         s3.download_file(S3_BUCKET, "models/"+model_name, model_path)
+#     model = joblib.load(model_path)
+#     loaded_models[model_name] = model
+#     return model
 def load_model_from_s3(model_name):
-    import os, joblib, boto3
     s3 = boto3.client("s3")
     model_path = os.path.join(MODEL_DIR, model_name)
+
+    # Return cached model if already loaded
     if model_name in loaded_models:
         return loaded_models[model_name]
+
+    # Only download if missing locally
     if not os.path.exists(model_path):
-        print("yes")
-        s3.download_file(S3_BUCKET, "models/"+model_name, model_path)
+        retries = 3
+        delay = 0.1  # 100 ms
+
+        for attempt in range(1, retries + 1):
+            try:
+                print(f"Downloading {model_name} from S3... Attempt {attempt}")
+                s3.download_file(S3_BUCKET, f"models/{model_name}", model_path)
+                break  # Success - exit retry loop
+            except Exception as err:
+                print(f"S3 download error: {err}")
+                if attempt == retries:
+                    raise  # No more retries, re-raise error
+                time.sleep(delay)
+
+    # Load model locally
     model = joblib.load(model_path)
     loaded_models[model_name] = model
     return model
-
 # ======= /predict ROUTE =======
 @app.route("/predict", methods=["POST"])
 def predict_url():
