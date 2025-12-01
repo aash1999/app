@@ -6,6 +6,7 @@ from datetime import datetime
 import boto3
 from urlExtractor import featureExtraction  # your feature extraction function
 import os
+import joblib
 app = Flask(__name__)
 
 # ====== AWS SETTINGS ======
