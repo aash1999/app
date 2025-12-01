@@ -55,47 +55,47 @@ def predict_url():
 
     request_id = str(uuid.uuid4())
 
-    # try:
+    try:
     # ---- Check cache ----
-    cached = cache_table.get_item(Key={"url": url})
-    if "Item" in cached:
-        is_phishing = cached["Item"]["is_phishing"]
-        source = "cache"
-    else:
-        model = load_model_from_s3(model_name)
-        features = featureExtraction(url)
-        pred = model.predict([features])[0]
-        print("/////////////",pred)
-        is_phishing = bool(pred)
-        source = "model"
-        # save to cache
-        cache_table.put_item(Item={"url": url, "is_phishing": is_phishing})
+        cached = cache_table.get_item(Key={"url": url})
+        if "Item" in cached:
+            is_phishing = cached["Item"]["is_phishing"]
+            source = "cache"
+        else:
+            model = load_model_from_s3(model_name)
+            features = featureExtraction(url)
+            pred = model.predict([features])[0]
+            print("/////////////",pred)
+            is_phishing = bool(pred)
+            source = "model"
+            # save to cache
+            cache_table.put_item(Item={"url": url, "is_phishing": is_phishing})
 
-    latency_ms = int((time.time() - start_time) * 1000)
+        latency_ms = int((time.time() - start_time) * 1000)
 
-    # ---- Log API hit ----
-    hits_table.put_item(Item={
-        "request_id": request_id,
-        "timestamp": datetime.utcnow().isoformat(),
-        "ec2_instance_id": EC2_INSTANCE_ID,
-        "url": url,
-        "model_used": model_name,
-        "is_phishing": is_phishing,
-        "latency_ms": latency_ms,
-        "source": source
-    })
+        # ---- Log API hit ----
+        hits_table.put_item(Item={
+            "request_id": request_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "ec2_instance_id": EC2_INSTANCE_ID,
+            "url": url,
+            "model_used": model_name,
+            "is_phishing": is_phishing,
+            "latency_ms": latency_ms,
+            "source": source
+        })
 
-    return jsonify({
-        "url": url,
-        "model_used": model_name,
-        "is_phishing": is_phishing,
-        "source": source,
-        "latency_ms": latency_ms,
-        "request_id": request_id
-    })
+        return jsonify({
+            "url": url,
+            "model_used": model_name,
+            "is_phishing": is_phishing,
+            "source": source,
+            "latency_ms": latency_ms,
+            "request_id": request_id
+        })
 
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # ======= /feedback ROUTE =======
 @app.route("/feedback", methods=["POST"])
