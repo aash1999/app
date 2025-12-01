@@ -189,19 +189,39 @@ If the rank of the domain < 100000, the vlaue of this feature is 1 (phishing) el
 """
 
 # 12.Web traffic (Web_Traffic)
+# def web_traffic(url):
+#   try:
+#     #Filling the whitespaces in the URL if any
+#     url = urllib.parse.quote(url)
+#     rank = BeautifulSoup(urllib.request.urlopen("http://data.alexa.com/data?cli=10&dat=s&url=" + url).read(), "xml").find(
+#         "REACH")['RANK']
+#     rank = int(rank)
+#   except TypeError:
+#         return 1
+#   if rank <100000:
+#     return 1
+#   else:
+#     return 0
+
 def web_traffic(url):
-  try:
-    #Filling the whitespaces in the URL if any
-    url = urllib.parse.quote(url)
-    rank = BeautifulSoup(urllib.request.urlopen("http://data.alexa.com/data?cli=10&dat=s&url=" + url).read(), "xml").find(
-        "REACH")['RANK']
-    rank = int(rank)
-  except TypeError:
-        return 1
-  if rank <100000:
-    return 1
-  else:
-    return 0
+    try:
+        # Encode URL properly
+        url = urllib.parse.quote(url)
+        # Fetch Alexa data
+        response = urllib.request.urlopen(
+            "http://data.alexa.com/data?cli=10&dat=s&url=" + url
+        ).read()
+        soup = BeautifulSoup(response, "xml")
+        reach = soup.find("REACH")
+        if reach and reach.has_attr("RANK"):
+            rank = int(reach["RANK"])
+            return 1 if rank < 100000 else 0
+        else:
+            # Alexa returned HTML or missing RANK attribute
+            return 0
+    except Exception:
+        # Network issues, service retired, or parsing failure
+        return 0
 
 """#### **3.2.3. Age of Domain**
 
