@@ -165,6 +165,7 @@ def load_model_from_s3(model_name):
     if model_name in loaded_models:
         return loaded_models[model_name]
     if not os.path.exists(model_path):
+        print(S3_BUCKET, "models/"+model_name)
         s3.download_file(S3_BUCKET, "models/"+model_name, model_path)
     model = joblib.load(model_path)
     loaded_models[model_name] = model
